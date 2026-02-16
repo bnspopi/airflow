@@ -314,7 +314,8 @@ class SnowflakeHook(DbApiHook):
         conn_config = dict(static_config)
 
         if conn_config.get("authenticator") == "oauth":
-            azure_conn_id = conn_config.get("azure_conn_id")
+             azure_conn_id = conn_config.get("azure_conn_id")
+
             if azure_conn_id:
                 conn_config["token"] = self.get_azure_oauth_token(azure_conn_id)
             else:
@@ -376,17 +377,37 @@ class SnowflakeHook(DbApiHook):
             # application is used to track origin of the requests
             "application": os.environ.get("AIRFLOW_SNOWFLAKE_PARTNER", "AIRFLOW"),
         }
+
+       conn_config = {
+    ...
+}
+
+# --- Static OAuth token support ---
+static_token = self._get_field(extra_dict, "token")
+
+if static_token:
+    conn_config["authenticator"] = "oauth"
+    conn_config["token"] = static_token
+    conn_config.pop("password", None)
+
+
+
+if static_token:
+    conn_config["authenticator"] = "oauth"_
+    
+
         if insecure_mode:
-            conn_config["insecure_mode"] = insecure_mode
+              conn_config["insecure_mode"] = insecure_mode
 
         if json_result_force_utf8_decoding:
             conn_config["json_result_force_utf8_decoding"] = json_result_force_utf8_decoding
 
-        if client_request_mfa_token:
-            conn_config["client_request_mfa_token"] = client_request_mfa_token
+        if json_result_force_utf8_decoding:
+              conn_config["json_result_force_utf8_decoding"] = json_result_force_utf8_decoding
 
         if client_store_temporary_credential:
-            conn_config["client_store_temporary_credential"] = client_store_temporary_credential
+              conn_config["client_store_temporary_credential"] = client_store_temporary_credential
+
 
         # If private_key_file is specified in the extra json, load the contents of the file as a private key.
         # If private_key_content is specified in the extra json, use it as a private key.
