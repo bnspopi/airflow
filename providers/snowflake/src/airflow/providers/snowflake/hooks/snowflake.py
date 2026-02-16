@@ -313,8 +313,35 @@ class SnowflakeHook(DbApiHook):
         static_config = self._get_static_conn_params
         conn_config = dict(static_config)
 
-        if conn_config.get("authenticator") == "oauth":
-            azure_conn_id = conn_config.get("azure_conn_id")
+       if conn_config.get("authenticator") == "oauth":
+
+    # 1️⃣ Static token case (PAT / pre-issued token)
+    if conn_config.get("token"):
+        # Nothing else to do
+        pass
+
+    # 2️⃣ Azure OAuth
+    elif conn_config.get("azure_conn_id"):
+        azure_conn_id = conn_config.get("azure_conn_id")
+        conn_config["token"] = self.get_azure_oauth_token(azure_conn_id)
+
+    # 3️⃣ Refresh-token / client-credentials flow
+    else:
+        grant_type = conn_config.get("grant_type")
+        if not grant_type:
+            raise ValueError("Grant type not provided")
+
+        conn_config["token"] = self._get_valid_oauth_token(
+            conn_config=conn_config,
+            token_endpoint=conn_config.get("token_endpoint"),
+            grant_type=grant_type,
+        )
+
+    # Remove password/user for OAuth mode
+    conn_config.pop("login", None)
+    conn_config.pop("user", None)
+    conn_config.pop("password", None)
+
             if azure_conn_id:
                 conn_config["token"] = self.get_azure_oauth_token(azure_conn_id)
             else:
@@ -376,17 +403,24 @@ class SnowflakeHook(DbApiHook):
             # application is used to track origin of the requests
             "application": os.environ.get("AIRFLOW_SNOWFLAKE_PARTNER", "AIRFLOW"),
         }
-        if insecure_mode:
-            conn_config["insecure_mode"] = insecure_mode
+        # --- Static OAuth / PAT token support ---
+static_token = self._get_field(extra_dict, "token")
 
-        if json_result_force_utf8_decoding:
-            conn_config["json_result_force_utf8_decoding"] = json_result_force_utf8_decoding
+if static_token:
+    conn_config["authenticator"] = "oauth"
+    conn_config["token"] = static_token
+    conn_config.pop("password", None)
 
-        if client_request_mfa_token:
-            conn_config["client_request_mfa_token"] = client_request_mfa_token
+    if not conn.password:
+        raise AirflowException("PAT authentication requires the token to be set in the password field.")
 
-        if client_store_temporary_credential:
-            conn_config["client_store_temporary_credential"] = client_store_temporary_credential
+    # Snowflake connector expects token-based auth via 'oauth'
+    conn_config["token"] = conn.password
+    conn_config["authenticator"] = "oauth"
+
+    # Remove password since we now use token
+    conn_config.pop("password", None)
+
 
         # If private_key_file is specified in the extra json, load the contents of the file as a private key.
         # If private_key_content is specified in the extra json, use it as a private key.
