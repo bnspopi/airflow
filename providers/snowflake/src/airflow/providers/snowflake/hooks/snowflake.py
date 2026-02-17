@@ -315,10 +315,16 @@ class SnowflakeHook(DbApiHook):
 
         if conn_config.get("authenticator") == "oauth":
             # Static token case
-            if conn_config.get("token"):
-                   pass
+           if conn_config.get("authenticator") == "oauth":
+                  token = conn_config.get("token")
 
-            azure_conn_id = conn_config.get("azure_conn_id")
+           if token:
+                    conn_config["access_token"] = token
+            else:
+               conn_config["access_token"] = self._get_valid_oauth_token(conn_config)
+
+
+                 azure_conn_id = conn_config.get("azure_conn_id")
             if azure_conn_id:
                 conn_config["token"] = self.get_azure_oauth_token(azure_conn_id)
             else:
