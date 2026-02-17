@@ -314,9 +314,14 @@ class SnowflakeHook(DbApiHook):
         conn_config = dict(static_config)
 
         if conn_config.get("authenticator") == "oauth":
-            # Static token case
            if conn_config.get("authenticator") == "oauth":
-                  token = conn_config.get("token")
+    token = conn_config.get("token")
+
+    if token:
+        conn_config["access_token"] = token
+    else:
+        conn_config["access_token"] = self._get_valid_oauth_token(conn_config)
+
 
            if token:
                     conn_config["access_token"] = token
