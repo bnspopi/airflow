@@ -33,8 +33,7 @@ body:
         Select your Airflow version.
         **Please note:** Airflow 2.x is in limited support (critical and security fixes only), and reaches
         EOL on April 22, 2026 - see the
-        [Airflow 2 EOL page]
-        (https://airflow.apache.org/docs/apache-airflow/stable/installation/supported-versions.html)
+        [Airflow 2 EOL page](https://airflow.apache.org/docs/apache-airflow/stable/installation/supported-versions.html)
         for more information.
       multiple: false
       options:
